@@ -48,14 +48,15 @@ common shared
   build-depends:
     , aeson
     , async
-    , base          >=4   && <5
+    , base              >=4   && <5
     , data-default
     , directory
     , filepath
     , mtl
     , optics-core
+    , optparse-generic
     , profunctors
-    , relude        >=1.0
+    , relude            >=1.0
     , shower
     , time
     , with-utf8
