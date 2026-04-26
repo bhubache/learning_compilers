@@ -3,6 +3,7 @@
 
 module Main where
 
+import Assemblygen qualified
 import Options.Generic
 import Parse qualified
 import System.Directory
@@ -44,8 +45,9 @@ main = do
     case Parse.parse source of
       Nothing -> error "Error when parsing"
       Just (rest, cAst) ->
-        removePathForcibly preprocessedFilePath >>
-        putStrLn cAst
-
+        removePathForcibly preprocessedFilePath
+          >> print asmAst
+        where
+          asmAst = Assemblygen.parseCAst cAst
 
 -- TODO: pass to existing assembler
