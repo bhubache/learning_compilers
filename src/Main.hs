@@ -38,6 +38,7 @@ main = do
   let inputFilePath = getFile record
   let baseFileName = takeBaseName inputFilePath
   let preprocessedFilePath = takeDirectory inputFilePath </> (baseFileName ++ ".i")
+  let asmFilePath = takeDirectory inputFilePath </> (baseFileName ++ ".s")
 
   _ <- readProcess "gcc" ["-E", "-P", inputFilePath, "-o", preprocessedFilePath] ""
 
@@ -47,6 +48,7 @@ main = do
       Just (rest, cAst) ->
         removePathForcibly preprocessedFilePath
           >> print asmAst
+          >> writeFile asmFilePath (Assemblygen.emitAsm asmAst)
         where
           asmAst = Assemblygen.parseCAst cAst
 

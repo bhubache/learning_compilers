@@ -31,3 +31,27 @@ genFunction (Parse.Function rt (Parse.Identifier identifier) params body) = AsmF
 
 genInstructionList :: Parse.Body -> [Instruction]
 genInstructionList (Parse.ReturnStatement (Parse.Constant imm)) = [Mov (Immediate imm) (Register "eax"), Ret]
+
+emitAsm :: AsmProgram -> String
+emitAsm (AsmProgram p) =
+  emitAsmFunction p
+    ++ "\n.section .note.GNU-stack,\"\",@progbits\n"
+
+emitAsmFunction :: AsmFunction -> String
+emitAsmFunction (AsmFunction (Identifier identifier) (InstructionList instructions)) =
+  "   .globl "
+    ++ identifier
+    ++ "\n"
+    ++ identifier
+    ++ ":\n"
+    ++ indent (emitInstructionList instructions)
+  where
+    indent = unlines . map ("    " ++) . lines
+
+emitInstructionList :: [Instruction] -> String
+emitInstructionList [] = ""
+emitInstructionList (x : xs) = emitInstruction x ++ "\n" ++ emitInstructionList xs
+
+emitInstruction :: Instruction -> String
+emitInstruction (Mov op1 op2) = "movl " ++ show op1 ++ ", " ++ show op2
+emitInstruction Ret = "ret"
