@@ -4,13 +4,8 @@ import Control.Applicative
 import Data.Char
 import System.IO as SysIO
 
-parse :: FilePath -> IO (Maybe (String, Program))
-parse sourceFile = do
-  content <- SysIO.readFile sourceFile
-  return (parseText content)
-
-parseText :: String -> Maybe (String, Program)
-parseText content =
+parse :: String -> Maybe (String, Program)
+parse content =
   let
     ast = runParser program content
    in

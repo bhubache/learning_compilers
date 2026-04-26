@@ -8,6 +8,7 @@ import Parse qualified
 import System.Directory
 import System.Exit
 import System.FilePath
+import System.IO
 import System.Process
 
 data Labeled = Example {lex :: Bool, parse :: Bool, codegen :: Bool}
@@ -29,7 +30,7 @@ instance ParseRecord Mixed where
 getFile :: Mixed -> FilePath
 getFile (Mixed _ (Unlabeled filePath)) = filePath
 
-main :: IO (String, Parse.Program)
+main :: IO ()
 main = do
   record <- getRecord "Learning compilers and haskell"
 
@@ -39,12 +40,12 @@ main = do
 
   _ <- readProcess "gcc" ["-E", "-P", inputFilePath, "-o", preprocessedFilePath] ""
 
-  ast <- Parse.parse preprocessedFilePath
+  readFile preprocessedFilePath >>= \source ->
+    case Parse.parse source of
+      Nothing -> error "Error when parsing"
+      Just (rest, cAst) ->
+        removePathForcibly preprocessedFilePath >>
+        putStrLn cAst
 
-  removePathForcibly preprocessedFilePath
-
-  putStr (show ast)
-
-  maybe exitFailure return ast
 
 -- TODO: pass to existing assembler
