@@ -31,6 +31,9 @@ instance ParseRecord Mixed where
 getFile :: Mixed -> FilePath
 getFile (Mixed _ (Unlabeled filePath)) = filePath
 
+lex' :: Mixed -> Bool
+lex' (Mixed labeled _) = not (parse labeled) && not (codegen labeled)
+
 main :: IO ()
 main = do
   record <- getRecord "Learning compilers and haskell"
@@ -47,8 +50,17 @@ main = do
       Nothing -> error "Error when parsing"
       Just (rest, cAst) ->
         removePathForcibly preprocessedFilePath
-          >> print asmAst
-          >> writeFile asmFilePath (Assemblygen.emitAsm asmAst)
+          >> case lex' record of
+            True -> pass
+            False ->
+              let
+                (Mixed labeled _) = record
+               in
+                case codegen labeled of
+                  False -> pass
+                  True ->
+                    print asmAst
+                      >> writeFile asmFilePath (Assemblygen.emitAsm asmAst)
         where
           asmAst = Assemblygen.parseCAst cAst
 
