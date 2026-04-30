@@ -51,13 +51,13 @@ main = do
       Just (rest, cAst) ->
         removePathForcibly preprocessedFilePath
           >> case lex' record of
-            True -> pass
+            True -> return ()
             False ->
               let
                 (Mixed labeled _) = record
                in
                 case codegen labeled of
-                  False -> pass
+                  False -> return ()
                   True ->
                     print asmAst
                       >> writeFile asmFilePath (Assemblygen.emitAsm asmAst)

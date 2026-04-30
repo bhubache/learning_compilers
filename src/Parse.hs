@@ -43,8 +43,12 @@ newtype Body = ReturnStatement Expression
   deriving (Show)
 
 data Expression
-  = WrappedExpression String
+  = WrappedExpression Expression
+  | UnaryExpr Unop Expression
   | Constant Integer
+  deriving (Show)
+
+data Unop = Negate | Complement
   deriving (Show)
 
 program :: Parser Program
@@ -59,8 +63,15 @@ ctype = CType <$> stringP "int"
 identifier :: Parser Identifier
 identifier = Identifier <$> spanP isAlpha
 
+notNull :: Parser String -> Parser String
+notNull (Parser p) = Parser $ \input -> do
+  (input', output) <- p input
+  if null output
+    then Nothing
+    else Just (input', output)
+
 constant :: Parser Expression
-constant = f <$> spanP isDigit
+constant = f <$> notNull (spanP isDigit)
   where
     f digits = Constant $ read digits
 
@@ -80,13 +91,16 @@ body = ReturnStatement <$> (whitespace *> charP '{' *> whitespace *> line <* whi
     line = stringP "return" *> whitespace *> expression <* whitespace <* charP ';'
 
 expression :: Parser Expression
-expression = Parser $ \input ->
-  case runParser constant input of
-    Just (rest, Constant output) -> Just (rest, Constant output)
-    Nothing ->
-      case runParser identifier input of
-        Just (rest, Identifier output) -> Just (rest, WrappedExpression output)
-        Nothing -> Nothing
+expression = constant <|> unexpr <|> wrappedExpression
+
+unexpr :: Parser Expression
+unexpr = UnaryExpr <$> unop <*> expression
+
+unop :: Parser Unop
+unop = (Complement <$ charP '~') <|> (Negate <$ charP '-')
+
+wrappedExpression :: Parser Expression
+wrappedExpression = WrappedExpression <$> (charP '(' *> whitespace *> expression <* whitespace <* charP ')')
 
 whitespace :: Parser String
 whitespace = spanP isSpace
